@@ -115,6 +115,7 @@ func deleteHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2H
 
 func validateJWT(tokenStr string) bool {
 	var hmacSampleSecret []byte
+	log.Println("Validating JWT")
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
@@ -122,6 +123,10 @@ func validateJWT(tokenStr string) bool {
 
 		return hmacSampleSecret, nil
 	})
+	if err != nil {
+		log.Printf("Error parsing token: %v", err)
+		return false
+	}
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		if claims["signer"] == "go-auth" {
 			log.Println("Valid jwt claim")
