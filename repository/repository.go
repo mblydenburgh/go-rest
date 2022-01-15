@@ -14,15 +14,6 @@ func GetItem(client *dynamo.DB, id string) (*CarItem, error) {
 	log.Printf("Looking up car id %v on table %v", id, tableName)
 	table := client.Table(tableName)
 
-	// var resultList []CarItem
-	// scanErr := table.Scan().All(&resultList)
-	// if scanErr != nil {
-	// 	log.Println("error scanning cars")
-	// 	log.Println(scanErr)
-	// 	return nil, scanErr
-	// }
-	// log.Println(resultList)
-
 	var result CarItem
 	rangeKey := "Car#"
 	err := table.Get("UserId", id).Range("ModelTypeAndId", dynamo.BeginsWith, rangeKey).One(&result)
