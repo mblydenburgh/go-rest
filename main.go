@@ -22,23 +22,25 @@ func main() {
 	lambda.Start(router)
 }
 
-func router(request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
+func router(request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	switch request.RequestContext.HTTP.Method {
-	case "GET":
+	case http.MethodGet:
 		return getHandler(request)
-	case "POST":
+	case http.MethodPost:
 		return postHandler(request)
+	case http.MethodDelete:
+		return deleteHandler(request)
 	default:
 		return clientError(http.StatusMethodNotAllowed)
 	}
 }
 
-func getHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
+func getHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	log.Println("Handling request")
 	dynamoClient := dynamo.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
 
 	carId := request.QueryStringParameters["id"]
-	car, err := repository.GetItem(dynamoClient, carId)
+	car, err := repository.GetCar(dynamoClient, carId)
 	if err != nil {
 		return serverError(err)
 	}
@@ -51,13 +53,13 @@ func getHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyR
 		return serverError(err)
 	}
 
-	return events.APIGatewayProxyResponse{
+	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusOK,
 		Body:       string(carJson),
 	}, nil
 }
 
-func postHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxyResponse, error) {
+func postHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	dynamoClient := dynamo.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
 	if request.Headers["content-type"] != "application/json" && request.Headers["Content-Type"] != "application/json" {
 		return clientError(http.StatusNotAcceptable)
@@ -73,27 +75,44 @@ func postHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayProxy
 		return clientError(http.StatusNotAcceptable)
 	}
 
-	id, err := repository.PutItem(dynamoClient, car)
+	id, err := repository.PutCar(dynamoClient, car)
 	if err != nil {
 		return serverError(err)
 	}
-	return events.APIGatewayProxyResponse{
+	return events.APIGatewayV2HTTPResponse{
 		StatusCode: 201,
 		Headers:    map[string]string{"Location": fmt.Sprintf("/cars?id=%s", id)},
 	}, nil
 }
 
-func serverError(err error) (events.APIGatewayProxyResponse, error) {
+func deleteHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
+	log.Println("Handling delete request")
+	dynamoClient := dynamo.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
+	id := request.QueryStringParameters["id"]
+
+	err := repository.DeleteCar(dynamoClient, id)
+	if err != nil {
+		log.Printf("Error deleting car due to %v", err)
+		return serverError(err)
+	}
+
+	return events.APIGatewayV2HTTPResponse{
+		StatusCode: 201,
+	}, nil
+
+}
+
+func serverError(err error) (events.APIGatewayV2HTTPResponse, error) {
 	fmt.Println(err.Error())
 
-	return events.APIGatewayProxyResponse{
+	return events.APIGatewayV2HTTPResponse{
 		StatusCode: http.StatusInternalServerError,
 		Body:       http.StatusText(http.StatusInternalServerError),
 	}, nil
 }
 
-func clientError(status int) (events.APIGatewayProxyResponse, error) {
-	return events.APIGatewayProxyResponse{
+func clientError(status int) (events.APIGatewayV2HTTPResponse, error) {
+	return events.APIGatewayV2HTTPResponse{
 		StatusCode: status,
 		Body:       http.StatusText(status),
 	}, nil

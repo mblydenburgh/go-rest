@@ -10,7 +10,7 @@ import (
 
 var tableName = "go-rest-test-table"
 
-func GetItem(client *dynamo.DB, id string) (*CarItem, error) {
+func GetCar(client *dynamo.DB, id string) (*CarItem, error) {
 	log.Printf("Looking up car id %v on table %v", id, tableName)
 	table := client.Table(tableName)
 
@@ -27,7 +27,7 @@ func GetItem(client *dynamo.DB, id string) (*CarItem, error) {
 	return &result, nil
 }
 
-func PutItem(client *dynamo.DB, car *domain.SaveCarPayload) (string, error) {
+func PutCar(client *dynamo.DB, car *domain.SaveCarPayload) (string, error) {
 	log.Println("Saving car")
 	table := client.Table(tableName)
 	uuid := uuid.NewV4().String()
@@ -50,4 +50,19 @@ func PutItem(client *dynamo.DB, car *domain.SaveCarPayload) (string, error) {
 		return "", err
 	}
 	return uuid, nil
+}
+
+func DeleteCar(client *dynamo.DB, id string) error {
+	log.Printf("Deleting car %v", id)
+	table := client.Table(tableName)
+	rangeKey := "Car#" + id
+	deleteAction := table.Delete("UserId", id).Range("ModelTypeAndId", rangeKey)
+	err := deleteAction.Run()
+	if err != nil {
+		log.Printf("Error deleting car %v, ", err)
+		return err
+	}
+
+	log.Println("Deleted car")
+	return nil
 }
