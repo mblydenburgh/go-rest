@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/golang-jwt/jwt"
 	"github.com/guregu/dynamo"
 )
 
@@ -38,6 +39,11 @@ func router(request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResp
 func getHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTTPResponse, error) {
 	log.Println("Handling request")
 	dynamoClient := dynamo.New(session.New(), &aws.Config{Region: aws.String("us-east-1")})
+
+	isValidJwt := validateJWT(request.Headers["Authorization"])
+	if !isValidJwt {
+		return clientError(403)
+	}
 
 	carId := request.QueryStringParameters["id"]
 	car, err := repository.GetCar(dynamoClient, carId)
@@ -97,9 +103,33 @@ func deleteHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2H
 	}
 
 	return events.APIGatewayV2HTTPResponse{
-		StatusCode: 201,
+		StatusCode: 200,
 	}, nil
 
+}
+
+func validateJWT(tokenStr string) bool {
+	var hmacSampleSecret []byte
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return hmacSampleSecret, nil
+	})
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		if claims["signer"] == "go-auth" {
+			log.Println("Valid jwt claim")
+			return true
+		} else {
+			log.Println("Invalid jwt claim")
+			return false
+		}
+	} else {
+		log.Println("Error validating JWT")
+		fmt.Println(err)
+		return false
+	}
 }
 
 func serverError(err error) (events.APIGatewayV2HTTPResponse, error) {
