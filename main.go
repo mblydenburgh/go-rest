@@ -71,6 +71,11 @@ func postHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTT
 		return clientError(http.StatusNotAcceptable)
 	}
 
+	isValidJwt := validateJWT(request.Headers["Authorization"])
+	if !isValidJwt {
+		return clientError(403)
+	}
+
 	car := new(domain.SaveCarPayload)
 	err := json.Unmarshal([]byte(request.Body), car)
 	if err != nil {
