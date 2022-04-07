@@ -8,6 +8,7 @@ import (
 	"mblydenburgh/go-rest/repository"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -113,9 +114,10 @@ func deleteHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2H
 
 }
 
-func validateJWT(tokenStr string) bool {
+func validateJWT(authHeader string) bool {
 	var hmacSampleSecret []byte
-	log.Println("Validating JWT")
+	log.Println("Validating JWT with authHeader: ", authHeader)
+	tokenStr := strings.Split(authHeader, " ")[1]
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
