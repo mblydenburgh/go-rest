@@ -30,12 +30,12 @@ export class CdkStack extends cdk.Stack {
         lambdaRole.addToPolicy(new PolicyStatement({
             effect: Effect.ALLOW,
             actions: [
-                "dynamodb:query",
-                "dynamodb:scan",
-                "dynamodb:getItem",
-                "dynamodb:putItem",
-                "dynamodb:updateItem",
-                "dynamodb:deleteItem"
+                "dynamodb:Query",
+                "dynamodb:Scan",
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem"
             ],
             resources: [
                 `arn:aws:dynamodb:${Aws.REGION}:${Aws.ACCOUNT_ID}:table/${dynamoTable.tableName}/index/*`
