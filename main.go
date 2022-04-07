@@ -73,7 +73,7 @@ func postHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2HTT
 	}
 
 	fmt.Println("Handling request headers: ", request.Headers)
-	isValidJwt := validateJWT(request.Headers["Authorization"])
+	isValidJwt := validateJWT(request.Headers["authorization"])
 	if !isValidJwt {
 		return clientError(403)
 	}
