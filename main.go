@@ -116,7 +116,7 @@ func deleteHandler(request events.APIGatewayV2HTTPRequest) (events.APIGatewayV2H
 }
 
 func validateJWT(authHeader string) bool {
-	var hmacSampleSecret []byte
+	var hmacSampleSecret = []byte("secret")
 	log.Println("Validating JWT with authHeader: ", authHeader)
 	tokenStr := strings.Split(authHeader, " ")[1]
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
