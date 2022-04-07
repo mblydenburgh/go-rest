@@ -9,7 +9,7 @@ export class CdkStack extends cdk.Stack {
     constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
         super(scope, id, props);
 
-        const appName = "go-rest-test"
+        const appName = "go-rest"
 
         const dynamoTable = new Table(this, `DynamoTable`, {
             tableName: `${appName}-table`,
