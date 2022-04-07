@@ -29,7 +29,14 @@ export class CdkStack extends cdk.Stack {
         dynamoTable.grantReadWriteData(lambdaRole)
         lambdaRole.addToPolicy(new PolicyStatement({
             effect: Effect.ALLOW,
-            actions: ["dynamodb:query"],
+            actions: [
+                "dynamodb:query",
+                "dynamodb:scan",
+                "dynamodb:getItem",
+                "dynamodb:putItem",
+                "dynamodb:updateItem",
+                "dynamodb:deleteItem"
+            ],
             resources: [
                 `arn:aws:dynamodb:${Aws.REGION}:${Aws.ACCOUNT_ID}:table/${dynamoTable.tableName}/index/*`
             ]
@@ -49,7 +56,7 @@ export class CdkStack extends cdk.Stack {
         const api = new HttpApi(this, `RestAPIGateway`, {
             apiName: "cars-api",
             corsPreflight: {
-                allowHeaders: ['Authorization', 'Access-Control-Allow-Origin','Access-Control-Allow-Headers','Content-Type',"X-Api-Key","X-Amz-Security-Token"],
+                allowHeaders: ['Authorization', 'Access-Control-Allow-Origin', 'Access-Control-Allow-Headers', 'Content-Type', "X-Api-Key", "X-Amz-Security-Token"],
                 allowMethods: [
                     CorsHttpMethod.ANY
                 ],
@@ -62,7 +69,7 @@ export class CdkStack extends cdk.Stack {
             methods: [HttpMethod.ANY],
             integration: lambdaIntegration
         })
-        
+
         api.addRoutes({
             path: "/cars/{proxy+}",
             methods: [HttpMethod.ANY],
