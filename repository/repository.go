@@ -5,10 +5,10 @@ import (
 	"mblydenburgh/go-rest/domain"
 
 	"github.com/guregu/dynamo"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
-var tableName = "go-rest-test-table"
+var tableName = "go-rest-table"
 
 func GetCar(client *dynamo.DB, id string) (*CarItem, error) {
 	log.Printf("Looking up car id %v on table %v", id, tableName)
